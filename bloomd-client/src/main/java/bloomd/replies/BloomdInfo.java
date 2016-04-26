@@ -82,4 +82,65 @@ public class BloomdInfo {
     public long getStorage() {
         return storage;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        BloomdInfo that = (BloomdInfo) o;
+
+        if (capacity != that.capacity) return false;
+        if (checks != that.checks) return false;
+        if (checkHits != that.checkHits) return false;
+        if (checkMisses != that.checkMisses) return false;
+        if (inMemory != that.inMemory) return false;
+        if (pageIns != that.pageIns) return false;
+        if (pageOuts != that.pageOuts) return false;
+        if (Float.compare(that.probability, probability) != 0) return false;
+        if (sets != that.sets) return false;
+        if (setHits != that.setHits) return false;
+        if (setMisses != that.setMisses) return false;
+        if (size != that.size) return false;
+        if (storage != that.storage) return false;
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = (int) (capacity ^ (capacity >>> 32));
+        result = 31 * result + (int) (checks ^ (checks >>> 32));
+        result = 31 * result + (int) (checkHits ^ (checkHits >>> 32));
+        result = 31 * result + (int) (checkMisses ^ (checkMisses >>> 32));
+        result = 31 * result + (inMemory ? 1 : 0);
+        result = 31 * result + (int) (pageIns ^ (pageIns >>> 32));
+        result = 31 * result + (int) (pageOuts ^ (pageOuts >>> 32));
+        result = 31 * result + (probability != +0.0f ? Float.floatToIntBits(probability) : 0);
+        result = 31 * result + (int) (sets ^ (sets >>> 32));
+        result = 31 * result + (int) (setHits ^ (setHits >>> 32));
+        result = 31 * result + (int) (setMisses ^ (setMisses >>> 32));
+        result = 31 * result + (int) (size ^ (size >>> 32));
+        result = 31 * result + (int) (storage ^ (storage >>> 32));
+        return result;
+    }
+
+    @Override
+    public String toString() {
+        return "BloomdInfo{" +
+                "capacity=" + capacity +
+                ", checks=" + checks +
+                ", checkHits=" + checkHits +
+                ", checkMisses=" + checkMisses +
+                ", inMemory=" + inMemory +
+                ", pageIns=" + pageIns +
+                ", pageOuts=" + pageOuts +
+                ", probability=" + probability +
+                ", sets=" + sets +
+                ", setHits=" + setHits +
+                ", setMisses=" + setMisses +
+                ", size=" + size +
+                ", storage=" + storage +
+                '}';
+    }
 }

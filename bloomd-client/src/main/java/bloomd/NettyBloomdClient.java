@@ -31,6 +31,8 @@ import io.netty.channel.socket.nio.NioSocketChannel;
 
 public class NettyBloomdClient implements BloomdClient {
 
+    public static final Object QUEUE_COMMAND_LOCK = new Object();
+
     private final BloomdCommandCodec<String, List<BloomdFilter>> listCodec = new ListCodec();
     private final BloomdCommandCodec<String, BloomdInfo> infoCodec = new InfoCodec();
     private final BloomdCommandCodec<String, ClearResult> clearCodec = new ClearCodec();
@@ -59,15 +61,12 @@ public class NettyBloomdClient implements BloomdClient {
                 .handler(new ClientInitializer(new SimpleChannelInboundHandler() {
                     @Override
                     protected void channelRead0(ChannelHandlerContext channelHandlerContext, Object reply) throws Exception {
-                        CompletableFuture<Object> poll;
-                        synchronized (NettyBloomdClient.this) {
-                            //noinspection unchecked
-                            poll = commandsQueue.poll();
-                            if (poll == null) {
-                                throw new IllegalStateException("Promise queue is empty, received reply");
-                            }
+                        //noinspection unchecked
+                        CompletableFuture<Object> future = commandsQueue.poll();
+                        if (future == null) {
+                            throw new IllegalStateException("Promise queue is empty, received reply");
                         }
-                        poll.complete(reply);
+                        future.complete(reply);
                     }
 
                     @Override
@@ -178,15 +177,16 @@ public class NettyBloomdClient implements BloomdClient {
 
         // queue a future to be completed with the result of this command
         CompletableFuture<R> replyCompletableFuture = new CompletableFuture<>();
-        commandsQueue.add(replyCompletableFuture);
+        synchronized (QUEUE_COMMAND_LOCK) {
+            commandsQueue.add(replyCompletableFuture);
 
-        // replace the codec in the pipeline with the appropriate instance
-        bloomdHandler.queueCodec(codec);
+            // replace the codec in the pipeline with the appropriate instance
+            bloomdHandler.queueCodec(codec);
 
-        // sends the command arguments through the pipeline
-        ch.writeAndFlush(args);
+            // sends the command arguments through the pipeline
+            ch.writeAndFlush(args);
+        }
 
         return replyCompletableFuture;
     }
-
 }

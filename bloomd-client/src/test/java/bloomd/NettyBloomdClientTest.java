@@ -110,7 +110,7 @@ public class NettyBloomdClientTest {
         assertThat(sync(client.list(FILTER))).isEmpty();
     }
 
-    private static <T> T sync(Future<T> future) throws InterruptedException, ExecutionException, TimeoutException {
+    public static <T> T sync(Future<T> future) throws InterruptedException, ExecutionException, TimeoutException {
         return future.get(5, TimeUnit.SECONDS);
     }
 }
