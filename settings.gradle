@@ -1,0 +1,4 @@
+include 'bloomd-client'
+include 'rx-bloomd-client'
+
+rootProject.name = 'java-bloomd-client'
