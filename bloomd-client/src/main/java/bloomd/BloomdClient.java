@@ -1,6 +1,7 @@
 package bloomd;
 
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
 
 import bloomd.replies.BloomdFilter;
@@ -36,4 +37,11 @@ public interface BloomdClient {
     Future<BloomdInfo> info(String filterName);
 
     Future<Boolean> flush(String filterName);
+
+    /**
+     * @return a future that will resolve to a {@link BloomdClient} implementation
+     */
+    static CompletableFuture<BloomdClient> newInstance(String host, int port) {
+        return new BloomdClientPool(host, port, 1).acquire();
+    }
 }

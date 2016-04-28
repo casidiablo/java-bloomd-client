@@ -19,7 +19,7 @@ import bloomd.replies.BloomdInfo;
 import bloomd.replies.CreateResult;
 import bloomd.replies.StateResult;
 
-import static bloomd.NettyBloomdClientTest.sync;
+import static bloomd.BloomdClientTest.sync;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.Assert.fail;
 
@@ -28,7 +28,7 @@ public class ParallelismTest {
 
     @Test
     public void testParallelRequests() throws Exception {
-        BloomdClient client = new NettyBloomdClient("docker.local", 8673);
+        BloomdClient client = BloomdClient.newInstance("docker.local", 8673).get(1, TimeUnit.SECONDS);
 
         // create filter with at least 200000 capacity
         CreateFilterArgs createArgs = new CreateFilterArgs.Builder()

@@ -18,13 +18,13 @@ import bloomd.replies.StateResult;
 
 import static org.assertj.core.api.Java6Assertions.assertThat;
 
-public class NettyBloomdClientTest {
+public class BloomdClientTest {
 
     public static final String FILTER = "testFilter" + System.currentTimeMillis();
 
     @Test
     public void testOperations() throws Exception {
-        BloomdClient client = new NettyBloomdClient("docker.local", 8673);
+        BloomdClient client = BloomdClient.newInstance("docker.local", 8673).get(1, TimeUnit.SECONDS);
 
         // make sure filters can be created
         assertThat(sync(client.create(FILTER))).isEqualTo(CreateResult.DONE);

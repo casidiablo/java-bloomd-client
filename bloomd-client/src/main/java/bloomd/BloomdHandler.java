@@ -14,8 +14,10 @@ public class BloomdHandler extends MessageToMessageCodec<String, Object> {
 
     private final Queue<BloomdCommandCodec<Object, Object>> encoders;
     private final Queue<BloomdCommandCodec<Object, Object>> decoders;
+    private final OnReplyReceivedListener onReplyReceivedListener;
 
-    public BloomdHandler() {
+    public BloomdHandler(OnReplyReceivedListener onReplyReceivedListener) {
+        this.onReplyReceivedListener = onReplyReceivedListener;
         encoders = new ConcurrentLinkedQueue<>();
         decoders = new ArrayDeque<>();
     }
@@ -36,12 +38,16 @@ public class BloomdHandler extends MessageToMessageCodec<String, Object> {
         BloomdCommandCodec<Object, Object> currentCodec = decoders.peek();
         Optional<Object> result = currentCodec.decode(msg);
         if (result.isPresent()) {
-            out.add(result.get());
+            onReplyReceivedListener.onReplyReceived(result.get());
             decoders.poll();
         }
     }
 
     public <I, O> void queueCodec(BloomdCommandCodec<I, O> codec) {
         encoders.add((BloomdCommandCodec<Object, Object>) codec);
+    }
+
+    public interface OnReplyReceivedListener {
+        void onReplyReceived(Object reply);
     }
 }

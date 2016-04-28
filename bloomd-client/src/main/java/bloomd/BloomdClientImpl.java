@@ -1,6 +1,5 @@
 package bloomd;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.CompletableFuture;
@@ -21,17 +20,9 @@ import bloomd.replies.BloomdInfo;
 import bloomd.replies.ClearResult;
 import bloomd.replies.CreateResult;
 import bloomd.replies.StateResult;
-import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.EventLoopGroup;
-import io.netty.channel.SimpleChannelInboundHandler;
-import io.netty.channel.nio.NioEventLoopGroup;
-import io.netty.channel.socket.nio.NioSocketChannel;
 
-public class NettyBloomdClient implements BloomdClient {
-
-    public static final Object QUEUE_COMMAND_LOCK = new Object();
+public class BloomdClientImpl implements BloomdClient {
 
     private final BloomdCommandCodec<String, List<BloomdFilter>> listCodec = new ListCodec();
     private final BloomdCommandCodec<String, BloomdInfo> infoCodec = new InfoCodec();
@@ -45,38 +36,17 @@ public class NettyBloomdClient implements BloomdClient {
     private final BloomdCommandCodec<StateArgs, List<StateResult>> bulkCodec = new GenericStateCodec<>("b", false);
     private final BloomdCommandCodec<StateArgs, List<StateResult>> multiCodec = new GenericStateCodec<>("m", false);
 
+    private final Object clientLock = new Object();
+
     private final Channel ch;
-    private final EventLoopGroup group;
-    private final Queue<CompletableFuture> commandsQueue;
     private final BloomdHandler bloomdHandler;
+    private final Queue<CompletableFuture> commandsQueue;
+    private boolean blocked = false;
 
-    public NettyBloomdClient(String host, int port) throws InterruptedException, IOException {
-        group = new NioEventLoopGroup();
-        commandsQueue = new ConcurrentLinkedQueue<>();
-
-        bloomdHandler = new BloomdHandler();
-        Bootstrap b = new Bootstrap()
-                .group(group)
-                .channel(NioSocketChannel.class)
-                .handler(new ClientInitializer(new SimpleChannelInboundHandler() {
-                    @Override
-                    protected void channelRead0(ChannelHandlerContext channelHandlerContext, Object reply) throws Exception {
-                        //noinspection unchecked
-                        CompletableFuture<Object> future = commandsQueue.poll();
-                        if (future == null) {
-                            throw new IllegalStateException("Promise queue is empty, received reply");
-                        }
-                        future.complete(reply);
-                    }
-
-                    @Override
-                    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-                        cause.printStackTrace();
-                    }
-                }, bloomdHandler));
-
-        // Start the connection attempt.
-        ch = b.connect(host, port).sync().channel();
+    public BloomdClientImpl(Channel channel) {
+        this.ch = channel;
+        this.bloomdHandler = new BloomdHandler(BloomdClientImpl.this::onReplyReceived);
+        this.commandsQueue = new ConcurrentLinkedQueue<>();
     }
 
     @Override
@@ -171,13 +141,17 @@ public class NettyBloomdClient implements BloomdClient {
     }
 
     public <T, R> CompletableFuture<R> sendCommand(BloomdCommandCodec<T, R> codec, T args) {
+        if (blocked) {
+            throw new IllegalStateException("Client was released from the pool");
+        }
+
         if (!ch.isActive()) {
             throw new IllegalStateException("Channel is not active");
         }
 
         // queue a future to be completed with the result of this command
         CompletableFuture<R> replyCompletableFuture = new CompletableFuture<>();
-        synchronized (QUEUE_COMMAND_LOCK) {
+        synchronized (clientLock) {
             commandsQueue.add(replyCompletableFuture);
 
             // replace the codec in the pipeline with the appropriate instance
@@ -188,5 +162,26 @@ public class NettyBloomdClient implements BloomdClient {
         }
 
         return replyCompletableFuture;
+    }
+
+    public BloomdHandler getBloomdHandler() {
+        return bloomdHandler;
+    }
+
+    public void onReplyReceived(Object reply) {
+        //noinspection unchecked
+        CompletableFuture<Object> future = commandsQueue.poll();
+        if (future == null) {
+            throw new IllegalStateException("Promise queue is empty, received reply");
+        }
+        future.complete(reply);
+    }
+
+    public Channel getChannel() {
+        return ch;
+    }
+
+    public void setBlocked(boolean blocked) {
+        this.blocked = blocked;
     }
 }
