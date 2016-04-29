@@ -28,7 +28,7 @@ public class TestPooling extends DockerBasedTest {
     public static final Random RAND = new Random();
 
     @Test
-    public void     testClientsPool() throws Exception {
+    public void testClientsPool() throws Exception {
         BloomdClientPool bloomdClientPool = new BloomdClientPool("localhost", port, 20);
 
         List<BloomdClient> clients = new ArrayList<>();
@@ -104,5 +104,7 @@ public class TestPooling extends DockerBasedTest {
             fail("Should have failed because the client was released already");
         } catch (IllegalStateException ignored) {
         }
+
+        bloomdClientPool.closeConnections();
     }
 }

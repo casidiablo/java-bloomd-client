@@ -1,6 +1,7 @@
 package bloomd;
 
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
@@ -14,11 +15,13 @@ import io.netty.util.concurrent.GenericFutureListener;
 
 public class BloomdClientPool {
 
+    private final AtomicBoolean closed = new AtomicBoolean(false);
     private final FixedChannelPool channelPool;
     private final ClientInitializer initializer;
+    private final EventLoopGroup group;
 
     public BloomdClientPool(String host, int port, int maxConnections) {
-        EventLoopGroup group = new NioEventLoopGroup();
+        group = new NioEventLoopGroup();
         initializer = new ClientInitializer();
 
         Bootstrap cb = new Bootstrap()
@@ -46,7 +49,15 @@ public class BloomdClientPool {
         channelPool = new FixedChannelPool(cb, poolHandler, maxConnections);
     }
 
+    /**
+     * Acquire a {@link BloomdClient} from this {@link BloomdClientPool}. The returned {@link Future} is notified once
+     * the acquire is successful and failed otherwise.
+     */
     public CompletableFuture<BloomdClient> acquire() {
+        if (closed.get()) {
+            throw new IllegalStateException("Pool was already closed. It can no longer be used.");
+        }
+
         Future<Channel> acquire = channelPool.acquire();
         CompletableFuture<BloomdClient> client = new CompletableFuture<>();
 
@@ -65,7 +76,15 @@ public class BloomdClientPool {
         return client;
     }
 
+    /**
+     * Release a {@link BloomdClient} back to this {@link BloomdClientPool}. The returned {@link Future} is notified once
+     * the release is successful and failed otherwise. When failed the {@link BloomdClient} connection will automatically closed.
+     */
     public CompletableFuture<Void> release(BloomdClient client) {
+        if (closed.get()) {
+            throw new IllegalStateException("Pool was already closed. It can no longer be used.");
+        }
+
         if (client instanceof BloomdClientImpl) {
             BloomdClientImpl bloomdClient = (BloomdClientImpl) client;
             Channel ch = bloomdClient.getChannel();
@@ -83,5 +102,13 @@ public class BloomdClientPool {
         } else {
             throw new IllegalArgumentException("Unrecognized client instance: " + client);
         }
+    }
+
+    /**
+     * Closes the connections for all clients in the pool
+     */
+    public Future<?> closeConnections() {
+        closed.set(true);
+        return group.shutdownGracefully();
     }
 }
