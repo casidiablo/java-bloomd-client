@@ -2,8 +2,12 @@ package bloomd;
 
 import org.junit.Test;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
 import bloomd.replies.BloomdFilter;
@@ -18,7 +22,15 @@ public class TestRxOperations {
 
     @Test
     public void testBloomdOperations() throws Exception {
-        RxBloomdClient client = RxBloomdClient.newInstance("docker.local", 8673);
+        // start bloomd service on a random port
+        int port = randomPort();
+        String containerId = startBloomdInDocker(port);
+        assertThat(containerId).isNotNull();
+
+        // allow a few seconds for the container to be up and running
+        Thread.sleep(3000);
+
+        RxBloomdClient client = RxBloomdClient.newInstance("localhost", port);
 
         // make sure filters can be created
         TestSubscriber<List<BloomdFilter>> subscriber = new TestSubscriber<>();
@@ -101,5 +113,32 @@ public class TestRxOperations {
 
         subscriber.awaitTerminalEvent(10, TimeUnit.SECONDS);
         subscriber.assertNoErrors();
+
+        // stop bloomd server
+        assertThat(stopBloomdInDocker(containerId))
+                .isEqualTo(containerId);
+    }
+
+    public static int randomPort() {
+        return 9000 + new Random().nextInt(5000);
+    }
+
+    public static String startBloomdInDocker(int port) {
+        return runCommand("docker run -d -p " + port + ":8673 saidimu/bloomd:v0.7.4");
+    }
+
+    public static String stopBloomdInDocker(String containerId) {
+        return runCommand("docker stop " + containerId);
+    }
+
+    private static String runCommand(String command) {
+        try {
+            Process p = Runtime.getRuntime().exec(command);
+            BufferedReader stdInput = new BufferedReader(new InputStreamReader(p.getInputStream()));
+
+            return stdInput.readLine();
+        } catch (IOException e) {
+            return null;
+        }
     }
 }

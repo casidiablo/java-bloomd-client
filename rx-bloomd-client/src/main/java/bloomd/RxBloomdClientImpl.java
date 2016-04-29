@@ -29,6 +29,10 @@ public class RxBloomdClientImpl implements RxBloomdClient {
         }
     }
 
+    public RxBloomdClientImpl(BloomdClient client) {
+        this.client = client;
+    }
+
     @Override
     public Observable<List<BloomdFilter>> list() {
         return Observable.from(client.list());
@@ -92,5 +96,9 @@ public class RxBloomdClientImpl implements RxBloomdClient {
     @Override
     public Observable<Boolean> flush(String filterName) {
         return Observable.from(client.flush(filterName));
+    }
+
+    public BloomdClient getUnderlyingClient() {
+        return client;
     }
 }
