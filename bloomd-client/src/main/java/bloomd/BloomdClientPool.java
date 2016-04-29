@@ -7,6 +7,7 @@ import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.channel.pool.ChannelHealthChecker;
 import io.netty.channel.pool.ChannelPoolHandler;
 import io.netty.channel.pool.FixedChannelPool;
 import io.netty.channel.socket.nio.NioSocketChannel;
@@ -46,7 +47,10 @@ public class BloomdClientPool {
             }
         };
 
-        channelPool = new FixedChannelPool(cb, poolHandler, maxConnections);
+        channelPool = new FixedChannelPool(
+                cb, poolHandler, ChannelHealthChecker.ACTIVE,
+                FixedChannelPool.AcquireTimeoutAction.FAIL, 10000, // TODO make this configurable
+                maxConnections, Integer.MAX_VALUE, true);
     }
 
     /**
@@ -109,6 +113,7 @@ public class BloomdClientPool {
      */
     public Future<?> closeConnections() {
         closed.set(true);
+        channelPool.close();
         return group.shutdownGracefully();
     }
 }
