@@ -146,7 +146,7 @@ public class BloomdClientImpl implements BloomdClient {
         }
 
         if (!ch.isActive()) {
-            throw new IllegalStateException("Channel is not active");
+            throw new IllegalStateException("Client is not connected to the server");
         }
 
         // queue a future to be completed with the result of this command

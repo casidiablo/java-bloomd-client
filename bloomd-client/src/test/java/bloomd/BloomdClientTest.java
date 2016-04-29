@@ -4,10 +4,7 @@ import org.junit.Test;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 import bloomd.args.CreateFilterArgs;
 import bloomd.replies.BloomdFilter;
@@ -18,13 +15,16 @@ import bloomd.replies.StateResult;
 
 import static org.assertj.core.api.Java6Assertions.assertThat;
 
-public class BloomdClientTest {
+public class BloomdClientTest extends DockerBasedTest {
 
     public static final String FILTER = "testFilter" + System.currentTimeMillis();
 
     @Test
     public void testOperations() throws Exception {
-        BloomdClient client = BloomdClient.newInstance("docker.local", 8673).get(1, TimeUnit.SECONDS);
+        // get bloomd client implementation
+        BloomdClient client = BloomdClient
+                .newInstance("localhost", port)
+                .get(1, TimeUnit.SECONDS);
 
         // make sure filters can be created
         assertThat(sync(client.create(FILTER))).isEqualTo(CreateResult.DONE);
@@ -108,9 +108,5 @@ public class BloomdClientTest {
 
         // the filter should not be found after this
         assertThat(sync(client.list(FILTER))).isEmpty();
-    }
-
-    public static <T> T sync(Future<T> future) throws InterruptedException, ExecutionException, TimeoutException {
-        return future.get(5, TimeUnit.SECONDS);
     }
 }

@@ -1,6 +1,5 @@
 package bloomd;
 
-import java.io.IOException;
 import java.util.List;
 
 import bloomd.args.CreateFilterArgs;
@@ -12,7 +11,7 @@ import bloomd.replies.StateResult;
 import rx.Observable;
 
 public interface RxBloomdClient {
-    static RxBloomdClient newInstance(String host, int port) throws IOException, InterruptedException {
+    static RxBloomdClient newInstance(String host, int port) {
         return new RxBloomdClientImpl(host, port);
     }
 

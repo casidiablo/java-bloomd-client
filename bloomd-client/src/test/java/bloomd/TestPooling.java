@@ -19,18 +19,17 @@ import bloomd.replies.BloomdInfo;
 import bloomd.replies.CreateResult;
 import bloomd.replies.StateResult;
 
-import static bloomd.BloomdClientTest.sync;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.Assert.fail;
 
-public class TestPooling {
+public class TestPooling extends DockerBasedTest {
 
     public static final String FILTER = "testFilter" + System.currentTimeMillis();
     public static final Random RAND = new Random();
 
     @Test
-    public void testClientsPool() throws Exception {
-        BloomdClientPool bloomdClientPool = new BloomdClientPool("docker.local", 8673, 20);
+    public void     testClientsPool() throws Exception {
+        BloomdClientPool bloomdClientPool = new BloomdClientPool("localhost", port, 20);
 
         List<BloomdClient> clients = new ArrayList<>();
 

@@ -2,8 +2,11 @@ package bloomd;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Logger;
 
 import io.netty.channel.Channel;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.ChannelPipeline;
 import io.netty.handler.codec.DelimiterBasedFrameDecoder;
 import io.netty.handler.codec.Delimiters;
@@ -14,6 +17,8 @@ import io.netty.handler.codec.string.StringEncoder;
  * Creates a newly configured {@link ChannelPipeline} for a new channel.
  */
 public class ClientInitializer {
+
+    private static final Logger LOG = Logger.getLogger(BloomdHandler.class.getSimpleName());
 
     private static final StringDecoder DECODER = new StringDecoder();
     private static final StringEncoder ENCODER = new StringEncoder();
@@ -28,6 +33,15 @@ public class ClientInitializer {
 
         // reconfigure the pipeline of this channel
         ChannelPipeline pipeline = ch.pipeline();
+
+        // add logging handler
+        pipeline.addLast(new ChannelInboundHandlerAdapter() {
+            @Override
+            public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+                super.channelInactive(ctx);
+                LOG.warning(String.format("Channel disconnected: %s", ctx.channel()));
+            }
+        });
 
         // Add the text line codec combination first
         pipeline.addLast(new DelimiterBasedFrameDecoder(8192, Delimiters.lineDelimiter()));

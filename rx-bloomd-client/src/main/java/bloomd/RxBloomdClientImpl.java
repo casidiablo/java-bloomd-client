@@ -1,7 +1,7 @@
 package bloomd;
 
-import java.io.IOException;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import bloomd.args.CreateFilterArgs;
 import bloomd.replies.BloomdFilter;
@@ -13,74 +13,84 @@ import rx.Observable;
 
 public class RxBloomdClientImpl implements RxBloomdClient {
 
-    private final NettyBloomdClient nettyBloomdClient;
+    private final BloomdClient client;
 
-    public RxBloomdClientImpl(String host, int port) throws IOException, InterruptedException {
-        nettyBloomdClient = new NettyBloomdClient(host, port);
+    public RxBloomdClientImpl(String host, int port) {
+        this(host, port, 10);
+    }
+
+    public RxBloomdClientImpl(String host, int port, int timeoutSeconds) {
+        try {
+            client = BloomdClient
+                    .newInstance(host, port)
+                    .get(timeoutSeconds, TimeUnit.SECONDS);
+        } catch (Throwable e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
     public Observable<List<BloomdFilter>> list() {
-        return Observable.from(nettyBloomdClient.list());
+        return Observable.from(client.list());
     }
 
     @Override
     public Observable<List<BloomdFilter>> list(String prefix) {
-        return Observable.from(nettyBloomdClient.list(prefix));
+        return Observable.from(client.list(prefix));
     }
 
     @Override
     public Observable<CreateResult> create(String filterName) {
-        return Observable.from(nettyBloomdClient.create(filterName));
+        return Observable.from(client.create(filterName));
     }
 
     @Override
     public Observable<CreateResult> create(CreateFilterArgs args) {
-        return Observable.from(nettyBloomdClient.create(args));
+        return Observable.from(client.create(args));
     }
 
     @Override
     public Observable<Boolean> drop(String filterName) {
-        return Observable.from(nettyBloomdClient.drop(filterName));
+        return Observable.from(client.drop(filterName));
     }
 
     @Override
     public Observable<Boolean> close(String filterName) {
-        return Observable.from(nettyBloomdClient.close(filterName));
+        return Observable.from(client.close(filterName));
     }
 
     @Override
     public Observable<ClearResult> clear(String filterName) {
-        return Observable.from(nettyBloomdClient.clear(filterName));
+        return Observable.from(client.clear(filterName));
     }
 
     @Override
     public Observable<StateResult> check(String filterName, String key) {
-        return Observable.from(nettyBloomdClient.check(filterName, key));
+        return Observable.from(client.check(filterName, key));
     }
 
     @Override
     public Observable<StateResult> set(String filterName, String key) {
-        return Observable.from(nettyBloomdClient.set(filterName, key));
+        return Observable.from(client.set(filterName, key));
     }
 
     @Override
     public Observable<List<StateResult>> multi(String filterName, String... keys) {
-        return Observable.from(nettyBloomdClient.multi(filterName, keys));
+        return Observable.from(client.multi(filterName, keys));
     }
 
     @Override
     public Observable<List<StateResult>> bulk(String filterName, String... keys) {
-        return Observable.from(nettyBloomdClient.bulk(filterName, keys));
+        return Observable.from(client.bulk(filterName, keys));
     }
 
     @Override
     public Observable<BloomdInfo> info(String filterName) {
-        return Observable.from(nettyBloomdClient.info(filterName));
+        return Observable.from(client.info(filterName));
     }
 
     @Override
     public Observable<Boolean> flush(String filterName) {
-        return Observable.from(nettyBloomdClient.flush(filterName));
+        return Observable.from(client.flush(filterName));
     }
 }

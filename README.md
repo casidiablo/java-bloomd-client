@@ -6,6 +6,6 @@ Java client for [armon's bloomd](https://github.com/armon/bloomd) built on top o
 
 ### TODO
 
-- Improve error handling
 - Controlled disconnect
 - Docs
+- Test flushing

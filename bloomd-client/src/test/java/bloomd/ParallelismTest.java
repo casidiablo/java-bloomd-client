@@ -19,16 +19,17 @@ import bloomd.replies.BloomdInfo;
 import bloomd.replies.CreateResult;
 import bloomd.replies.StateResult;
 
-import static bloomd.BloomdClientTest.sync;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.Assert.fail;
 
-public class ParallelismTest {
+public class ParallelismTest extends DockerBasedTest {
     private static final String FILTER = "filterName" + System.currentTimeMillis();
 
     @Test
     public void testParallelRequests() throws Exception {
-        BloomdClient client = BloomdClient.newInstance("docker.local", 8673).get(1, TimeUnit.SECONDS);
+        BloomdClient client = BloomdClient
+                .newInstance("localhost", port)
+                .get(1, TimeUnit.SECONDS);
 
         // create filter with at least 200000 capacity
         CreateFilterArgs createArgs = new CreateFilterArgs.Builder()
