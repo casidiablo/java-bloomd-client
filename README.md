@@ -85,3 +85,45 @@ The RxJava extension also offers a pooling implementation atop `BloomdClientPool
 RxBloomdClientPool rxClientPool = new RxBloomdClientPool("host", 8673, 5);
 Observable<RxBloomdClient> clientObservable = rxClientPool.acquire();
 ```
+
+### Installation
+
+Gradle:
+
+```groovy
+repositories {
+    maven { url "https://jitpack.io" }
+}
+
+dependencies {
+    compile 'com.github.casidiablo.java-bloomd-client:bloomd-client:0.3'
+    compile 'com.github.casidiablo.java-bloomd-client:rx-bloomd-client:0.3'
+}
+```
+
+Leiningen:
+
+```clojure
+:repositories [["jitpack" "https://jitpack.io"]]
+:dependencies [[com.github.casidiablo.java-bloomd-client/bloomd-client "0.3"]]
+```
+
+Maven:
+
+```xml
+<repositories>
+    <repository>
+	    <id>jitpack.io</id>
+		<url>https://jitpack.io</url>
+    </repository>
+</repositories>
+
+<dependencies>
+    <dependency>
+        <groupId>com.github.casidiablo.java-bloomd-client</groupId>
+        <artifactId>bloomd-client</artifactId>
+        <version>0.3</version>
+        <scope>compile</scope>
+    </dependency>
+</dependencies>
+```
