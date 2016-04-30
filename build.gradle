@@ -2,6 +2,9 @@ subprojects {
     apply plugin: 'java'
     apply plugin: 'maven'
 
+    group = 'bloomd'
+    version = '0.3'
+
     sourceCompatibility = 1.8
     targetCompatibility = 1.8
 
@@ -10,13 +13,7 @@ subprojects {
         from sourceSets.main.allSource
     }
 
-    task javadocJar(type: Jar, dependsOn: javadoc) {
-        classifier = 'javadoc'
-        from javadoc.destinationDir
-    }
-
     artifacts {
         archives sourcesJar
-        archives javadocJar
     }
 }
