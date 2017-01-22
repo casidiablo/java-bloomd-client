@@ -96,8 +96,8 @@ repositories {
 }
 
 dependencies {
-    compile 'com.github.casidiablo.java-bloomd-client:bloomd-client:0.3'
-    compile 'com.github.casidiablo.java-bloomd-client:rx-bloomd-client:0.3'
+    compile 'com.github.casidiablo.java-bloomd-client:bloomd-client:0.4'
+    compile 'com.github.casidiablo.java-bloomd-client:rx-bloomd-client:0.4'
 }
 ```
 
@@ -105,7 +105,7 @@ Leiningen:
 
 ```clojure
 :repositories [["jitpack" "https://jitpack.io"]]
-:dependencies [[com.github.casidiablo.java-bloomd-client/bloomd-client "0.3"]]
+:dependencies [[com.github.casidiablo.java-bloomd-client/bloomd-client "0.4"]]
 ```
 
 Maven:
@@ -122,7 +122,7 @@ Maven:
     <dependency>
         <groupId>com.github.casidiablo.java-bloomd-client</groupId>
         <artifactId>bloomd-client</artifactId>
-        <version>0.3</version>
+        <version>0.4</version>
         <scope>compile</scope>
     </dependency>
 </dependencies>
