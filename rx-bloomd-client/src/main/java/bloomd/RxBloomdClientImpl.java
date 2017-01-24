@@ -9,7 +9,7 @@ import bloomd.replies.BloomdInfo;
 import bloomd.replies.ClearResult;
 import bloomd.replies.CreateResult;
 import bloomd.replies.StateResult;
-import rx.Observable;
+import rx.Single;
 
 public class RxBloomdClientImpl implements RxBloomdClient {
 
@@ -34,68 +34,68 @@ public class RxBloomdClientImpl implements RxBloomdClient {
     }
 
     @Override
-    public Observable<List<BloomdFilter>> list() {
-        return Observable.from(client.list());
+    public Single<List<BloomdFilter>> list() {
+        return Single.from(client.list());
     }
 
     @Override
-    public Observable<List<BloomdFilter>> list(String prefix) {
-        return Observable.from(client.list(prefix));
+    public Single<List<BloomdFilter>> list(String prefix) {
+        return Single.from(client.list(prefix));
     }
 
     @Override
-    public Observable<CreateResult> create(String filterName) {
-        return Observable.from(client.create(filterName));
+    public Single<CreateResult> create(String filterName) {
+        return Single.from(client.create(filterName));
     }
 
     @Override
-    public Observable<CreateResult> create(CreateFilterArgs args) {
-        return Observable.from(client.create(args));
+    public Single<CreateResult> create(CreateFilterArgs args) {
+        return Single.from(client.create(args));
     }
 
     @Override
-    public Observable<Boolean> drop(String filterName) {
-        return Observable.from(client.drop(filterName));
+    public Single<Boolean> drop(String filterName) {
+        return Single.from(client.drop(filterName));
     }
 
     @Override
-    public Observable<Boolean> close(String filterName) {
-        return Observable.from(client.close(filterName));
+    public Single<Boolean> close(String filterName) {
+        return Single.from(client.close(filterName));
     }
 
     @Override
-    public Observable<ClearResult> clear(String filterName) {
-        return Observable.from(client.clear(filterName));
+    public Single<ClearResult> clear(String filterName) {
+        return Single.from(client.clear(filterName));
     }
 
     @Override
-    public Observable<StateResult> check(String filterName, String key) {
-        return Observable.from(client.check(filterName, key));
+    public Single<StateResult> check(String filterName, String key) {
+        return Single.from(client.check(filterName, key));
     }
 
     @Override
-    public Observable<StateResult> set(String filterName, String key) {
-        return Observable.from(client.set(filterName, key));
+    public Single<StateResult> set(String filterName, String key) {
+        return Single.from(client.set(filterName, key));
     }
 
     @Override
-    public Observable<List<StateResult>> multi(String filterName, String... keys) {
-        return Observable.from(client.multi(filterName, keys));
+    public Single<List<StateResult>> multi(String filterName, String... keys) {
+        return Single.from(client.multi(filterName, keys));
     }
 
     @Override
-    public Observable<List<StateResult>> bulk(String filterName, String... keys) {
-        return Observable.from(client.bulk(filterName, keys));
+    public Single<List<StateResult>> bulk(String filterName, String... keys) {
+        return Single.from(client.bulk(filterName, keys));
     }
 
     @Override
-    public Observable<BloomdInfo> info(String filterName) {
-        return Observable.from(client.info(filterName));
+    public Single<BloomdInfo> info(String filterName) {
+        return Single.from(client.info(filterName));
     }
 
     @Override
-    public Observable<Boolean> flush(String filterName) {
-        return Observable.from(client.flush(filterName));
+    public Single<Boolean> flush(String filterName) {
+        return Single.from(client.flush(filterName));
     }
 
     public BloomdClient getUnderlyingClient() {

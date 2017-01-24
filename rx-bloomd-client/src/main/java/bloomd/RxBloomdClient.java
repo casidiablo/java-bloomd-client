@@ -8,36 +8,36 @@ import bloomd.replies.BloomdInfo;
 import bloomd.replies.ClearResult;
 import bloomd.replies.CreateResult;
 import bloomd.replies.StateResult;
-import rx.Observable;
+import rx.Single;
 
 public interface RxBloomdClient {
     static RxBloomdClient newInstance(String host, int port) {
         return new RxBloomdClientImpl(host, port);
     }
 
-    Observable<List<BloomdFilter>> list();
+    Single<List<BloomdFilter>> list();
 
-    Observable<List<BloomdFilter>> list(String prefix);
+    Single<List<BloomdFilter>> list(String prefix);
 
-    Observable<CreateResult> create(String filterName);
+    Single<CreateResult> create(String filterName);
 
-    Observable<CreateResult> create(CreateFilterArgs args);
+    Single<CreateResult> create(CreateFilterArgs args);
 
-    Observable<Boolean> drop(String filterName);
+    Single<Boolean> drop(String filterName);
 
-    Observable<Boolean> close(String filterName);
+    Single<Boolean> close(String filterName);
 
-    Observable<ClearResult> clear(String filterName);
+    Single<ClearResult> clear(String filterName);
 
-    Observable<StateResult> check(String filterName, String key);
+    Single<StateResult> check(String filterName, String key);
 
-    Observable<StateResult> set(String filterName, String key);
+    Single<StateResult> set(String filterName, String key);
 
-    Observable<List<StateResult>> multi(String filterName, String... keys);
+    Single<List<StateResult>> multi(String filterName, String... keys);
 
-    Observable<List<StateResult>> bulk(String filterName, String... keys);
+    Single<List<StateResult>> bulk(String filterName, String... keys);
 
-    Observable<BloomdInfo> info(String filterName);
+    Single<BloomdInfo> info(String filterName);
 
-    Observable<Boolean> flush(String filterName);
+    Single<Boolean> flush(String filterName);
 }
