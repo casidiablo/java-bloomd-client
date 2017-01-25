@@ -2,7 +2,6 @@ package bloomd;
 
 import io.netty.util.concurrent.Future;
 import rx.Observable;
-import rx.schedulers.Schedulers;
 
 public class RxBloomdClientPool {
 
@@ -19,7 +18,6 @@ public class RxBloomdClientPool {
     public Observable<RxBloomdClient> acquire() {
         return Observable
                 .from(clientPool.acquire())
-                .subscribeOn(Schedulers.io())
                 .flatMap(client -> {
                     RxBloomdClient rxClient = new RxBloomdClientImpl(client);
 
