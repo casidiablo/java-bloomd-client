@@ -75,6 +75,7 @@ public class TestRxConnPooling {
                 .isEqualTo(containerId);
 
         executor.shutdown();
+        client.closeConnections().timeout(10, TimeUnit.SECONDS).toBlocking().value();
     }
 
     private Single<String> randomOp(RxBloomdClient client) {

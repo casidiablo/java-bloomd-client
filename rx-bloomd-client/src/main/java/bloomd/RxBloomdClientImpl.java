@@ -93,6 +93,13 @@ public class RxBloomdClientImpl implements RxBloomdClient {
         return execute(client -> client.flush(filterName));
     }
 
+    @Override
+    public Single<Boolean> closeConnections() {
+        return Single.defer(() ->
+                Single.from(bloomdClientPool.closeConnections())
+                        .map(ignore -> true));
+    }
+
     private <T> Single<T> execute(Function<BloomdClient, Future<T>> fn) {
         return Single.defer(() -> {
             // acquire a client from the current pool

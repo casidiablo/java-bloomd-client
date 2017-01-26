@@ -32,4 +32,6 @@ public interface RxBloomdClient {
     Single<BloomdInfo> info(String filterName);
 
     Single<Boolean> flush(String filterName);
+
+    Single<Boolean> closeConnections();
 }
