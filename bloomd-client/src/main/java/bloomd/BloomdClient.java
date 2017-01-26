@@ -1,16 +1,13 @@
 package bloomd;
 
+import bloomd.args.CreateFilterArgs;
+import bloomd.replies.*;
+
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
 
-import bloomd.replies.BloomdFilter;
-import bloomd.replies.ClearResult;
-import bloomd.replies.BloomdInfo;
-import bloomd.replies.CreateResult;
-import bloomd.replies.StateResult;
-import bloomd.args.CreateFilterArgs;
-
+@SuppressWarnings("SameParameterValue")
 public interface BloomdClient {
     Future<List<BloomdFilter>> list();
 
@@ -42,6 +39,20 @@ public interface BloomdClient {
      * @return a future that will resolve to a {@link BloomdClient} implementation
      */
     static CompletableFuture<BloomdClient> newInstance(String host, int port) {
-        return new BloomdClientPool(host, port, 1).acquire();
+        return newInstance(host, port, 1);
+    }
+
+    /**
+     * @return a future that will resolve to a {@link BloomdClient} implementation
+     */
+    static CompletableFuture<BloomdClient> newInstance(String host, int port, int maxConnections) {
+        return newInstance(host, port, maxConnections, 2_000);
+    }
+
+    /**
+     * @return a future that will resolve to a {@link BloomdClient} implementation
+     */
+    static CompletableFuture<BloomdClient> newInstance(String host, int port, int maxConnections, int acquireTimeoutMillis) {
+        return new BloomdClientPool(host, port, maxConnections, acquireTimeoutMillis).acquire();
     }
 }

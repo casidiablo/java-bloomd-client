@@ -1,9 +1,5 @@
 package bloomd;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.logging.Logger;
-
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
@@ -13,17 +9,21 @@ import io.netty.handler.codec.Delimiters;
 import io.netty.handler.codec.string.StringDecoder;
 import io.netty.handler.codec.string.StringEncoder;
 
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.Logger;
+
 /**
  * Creates a newly configured {@link ChannelPipeline} for a new channel.
  */
 public class ClientInitializer {
 
-    private static final Logger LOG = Logger.getLogger(BloomdHandler.class.getSimpleName());
+    private static final Logger LOG = Logger.getLogger(ClientInitializer.class.getSimpleName());
 
     private static final StringDecoder DECODER = new StringDecoder();
     private static final StringEncoder ENCODER = new StringEncoder();
 
-    private final Map<Channel, BloomdClient> registry = new HashMap<>();
+    private final Map<Channel, BloomdClient> registry = new ConcurrentHashMap<>();
 
     public void initChannel(Channel ch) {
         // associate this new channel with a new BloomdClient implementation
@@ -56,7 +56,7 @@ public class ClientInitializer {
         BloomdClient clientImpl = registry.get(channel);
 
         if (clientImpl == null) {
-            throw new IllegalStateException("Could not find client implementation from channel");
+            throw new IllegalStateException("Could not find client implementation from channel " + channel);
         }
 
         return clientImpl;

@@ -1,7 +1,5 @@
 package bloomd.decoders;
 
-import java.util.Optional;
-
 import bloomd.replies.BloomdInfo;
 
 public class InfoCodec implements BloomdCommandCodec<String, BloomdInfo> {
@@ -14,8 +12,11 @@ public class InfoCodec implements BloomdCommandCodec<String, BloomdInfo> {
     }
 
     @Override
-    public Optional<BloomdInfo> decode(String msg) throws Exception {
+    public BloomdInfo decode(String msg) throws Exception {
         switch (msg) {
+            case "Filter does not exist":
+                throw new IllegalStateException(msg);
+
             case "START":
                 if (builder != null) {
                     throw new IllegalStateException("START not expected. Builder already initialized.");
@@ -23,7 +24,7 @@ public class InfoCodec implements BloomdCommandCodec<String, BloomdInfo> {
 
                 builder = new BloomdInfoBuilder();
 
-                return Optional.empty();
+                return null;
 
             case "END":
                 if (builder == null) {
@@ -34,7 +35,7 @@ public class InfoCodec implements BloomdCommandCodec<String, BloomdInfo> {
 
                 builder = null;
 
-                return Optional.of(bloomdInfo);
+                return bloomdInfo;
 
             default:
                 String[] parts = msg.split(" ");
@@ -88,7 +89,7 @@ public class InfoCodec implements BloomdCommandCodec<String, BloomdInfo> {
                         break;
                 }
 
-                return Optional.empty();
+                return null;
         }
     }
 

@@ -1,7 +1,5 @@
 package bloomd.decoders;
 
-import java.util.Optional;
-
 import bloomd.replies.ClearResult;
 
 public class ClearCodec implements BloomdCommandCodec<String, ClearResult> {
@@ -12,16 +10,16 @@ public class ClearCodec implements BloomdCommandCodec<String, ClearResult> {
     }
 
     @Override
-    public Optional<ClearResult> decode(String msg) throws Exception {
+    public ClearResult decode(String msg) throws Exception {
         switch (msg) {
             case "Done":
-                return Optional.of(ClearResult.CLEARED);
+                return ClearResult.CLEARED;
 
             case "Filter does not exist":
-                return Optional.of(ClearResult.FILTER_DOES_NOT_EXISTS);
+                return ClearResult.FILTER_DOES_NOT_EXISTS;
 
             case "Filter is not proxied. Close it first.":
-                return Optional.of(ClearResult.CANNOT_CLEAR);
+                return ClearResult.CANNOT_CLEAR;
 
             default:
                 throw new RuntimeException(msg);

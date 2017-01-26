@@ -1,5 +1,6 @@
 package bloomd;
 
+import bloomd.replies.BloomdFilter;
 import org.junit.Test;
 
 import java.net.ConnectException;
@@ -8,11 +9,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import bloomd.replies.BloomdFilter;
-
-import static bloomd.DockerHelper.randomPort;
-import static bloomd.DockerHelper.startBloomdInDocker;
-import static bloomd.DockerHelper.stopBloomdInDocker;
+import static bloomd.DockerHelper.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.fail;
 
@@ -35,6 +32,8 @@ public class ErrorSurfacingTest {
         int port = randomPort();
         String containerId = startBloomdInDocker(port);
         assertThat(containerId).isNotNull();
+
+        Thread.sleep(3000);
 
         // create a client that connects to the service
         BloomdClient client = BloomdClient.newInstance("localhost", port).get(1, TimeUnit.SECONDS);

@@ -1,14 +1,13 @@
 package bloomd;
 
-import java.util.ArrayDeque;
-import java.util.List;
-import java.util.Optional;
-import java.util.Queue;
-import java.util.concurrent.ConcurrentLinkedQueue;
-
 import bloomd.decoders.BloomdCommandCodec;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToMessageCodec;
+
+import java.util.ArrayDeque;
+import java.util.List;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class BloomdHandler extends MessageToMessageCodec<String, Object> {
 
@@ -36,11 +35,29 @@ public class BloomdHandler extends MessageToMessageCodec<String, Object> {
     @Override
     protected void decode(ChannelHandlerContext ctx, String msg, List<Object> out) throws Exception {
         BloomdCommandCodec<Object, Object> currentCodec = decoders.peek();
-        Optional<Object> result = currentCodec.decode(msg);
-        if (result.isPresent()) {
-            onReplyReceivedListener.onReplyReceived(result.get());
+
+        Object result = null;
+        Exception failure;
+        try {
+            result = currentCodec.decode(msg);
+            failure = null;
+        } catch (Exception e) {
+            failure = e;
+        }
+
+        if (failure != null) {
+            onReplyReceivedListener.onError(failure);
+            decoders.poll();
+        } else if (result != null) {
+            onReplyReceivedListener.onReplyReceived(result);
             decoders.poll();
         }
+    }
+
+    @Override
+    public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+        super.channelInactive(ctx);
+        onReplyReceivedListener.onDisconnect();
     }
 
     public <I, O> void queueCodec(BloomdCommandCodec<I, O> codec) {
@@ -49,5 +66,9 @@ public class BloomdHandler extends MessageToMessageCodec<String, Object> {
 
     public interface OnReplyReceivedListener {
         void onReplyReceived(Object reply);
+
+        void onDisconnect();
+
+        void onError(Exception e);
     }
 }

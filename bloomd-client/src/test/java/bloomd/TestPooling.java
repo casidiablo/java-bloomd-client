@@ -1,5 +1,8 @@
 package bloomd;
 
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.junit.Assert.fail;
+
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -19,9 +22,6 @@ import bloomd.replies.BloomdInfo;
 import bloomd.replies.CreateResult;
 import bloomd.replies.StateResult;
 
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-import static org.junit.Assert.fail;
-
 public class TestPooling extends DockerBasedTest {
 
     public static final String FILTER = "testFilter" + System.currentTimeMillis();
@@ -29,7 +29,7 @@ public class TestPooling extends DockerBasedTest {
 
     @Test
     public void testClientsPool() throws Exception {
-        BloomdClientPool bloomdClientPool = new BloomdClientPool("localhost", port, 20);
+        BloomdClientPool bloomdClientPool = new BloomdClientPool("localhost", port, 20, 10000);
 
         List<BloomdClient> clients = new ArrayList<>();
 

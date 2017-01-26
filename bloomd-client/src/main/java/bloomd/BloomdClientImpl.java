@@ -1,28 +1,18 @@
 package bloomd;
 
+import bloomd.args.CreateFilterArgs;
+import bloomd.args.StateArgs;
+import bloomd.decoders.*;
+import bloomd.replies.*;
+import io.netty.channel.Channel;
+
 import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Future;
 
-import bloomd.args.CreateFilterArgs;
-import bloomd.args.StateArgs;
-import bloomd.decoders.BloomdCommandCodec;
-import bloomd.decoders.ClearCodec;
-import bloomd.decoders.CreateCodec;
-import bloomd.decoders.GenericStateCodec;
-import bloomd.decoders.InfoCodec;
-import bloomd.decoders.ListCodec;
-import bloomd.decoders.SingleArgCodec;
-import bloomd.replies.BloomdFilter;
-import bloomd.replies.BloomdInfo;
-import bloomd.replies.ClearResult;
-import bloomd.replies.CreateResult;
-import bloomd.replies.StateResult;
-import io.netty.channel.Channel;
-
-public class BloomdClientImpl implements BloomdClient {
+public class BloomdClientImpl implements BloomdClient, BloomdHandler.OnReplyReceivedListener {
 
     private final BloomdCommandCodec<String, List<BloomdFilter>> listCodec = new ListCodec();
     private final BloomdCommandCodec<String, BloomdInfo> infoCodec = new InfoCodec();
@@ -45,7 +35,7 @@ public class BloomdClientImpl implements BloomdClient {
 
     public BloomdClientImpl(Channel channel) {
         this.ch = channel;
-        this.bloomdHandler = new BloomdHandler(BloomdClientImpl.this::onReplyReceived);
+        this.bloomdHandler = new BloomdHandler(this);
         this.commandsQueue = new ConcurrentLinkedQueue<>();
     }
 
@@ -168,6 +158,7 @@ public class BloomdClientImpl implements BloomdClient {
         return bloomdHandler;
     }
 
+    @Override
     public void onReplyReceived(Object reply) {
         //noinspection unchecked
         CompletableFuture<Object> future = commandsQueue.poll();
@@ -175,6 +166,24 @@ public class BloomdClientImpl implements BloomdClient {
             throw new IllegalStateException("Promise queue is empty, received reply");
         }
         future.complete(reply);
+    }
+
+    @Override
+    public void onDisconnect() {
+        CompletableFuture<Object> future;
+        //noinspection unchecked
+        while ((future = commandsQueue.poll()) != null) {
+            future.completeExceptionally(new IllegalStateException("Connection has been dropped"));
+        }
+    }
+
+    @Override
+    public void onError(Exception e) {
+        CompletableFuture<Object> future;
+        //noinspection unchecked
+        while ((future = commandsQueue.poll()) != null) {
+            future.completeExceptionally(e);
+        }
     }
 
     public Channel getChannel() {

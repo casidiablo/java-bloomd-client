@@ -1,104 +1,113 @@
 package bloomd;
 
-import java.util.List;
-import java.util.concurrent.TimeUnit;
-
 import bloomd.args.CreateFilterArgs;
-import bloomd.replies.BloomdFilter;
-import bloomd.replies.BloomdInfo;
-import bloomd.replies.ClearResult;
-import bloomd.replies.CreateResult;
-import bloomd.replies.StateResult;
+import bloomd.replies.*;
 import rx.Single;
+
+import java.util.List;
+import java.util.concurrent.Future;
+import java.util.function.Function;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class RxBloomdClientImpl implements RxBloomdClient {
 
-    private final BloomdClient client;
+    private static final Logger LOG = Logger.getLogger(RxBloomdClient.class.getSimpleName());
+
+    private final BloomdClientPool bloomdClientPool;
 
     public RxBloomdClientImpl(String host, int port) {
-        this(host, port, 10);
+        this(host, port, 1, 10_000);
     }
 
-    public RxBloomdClientImpl(String host, int port, int timeoutSeconds) {
-        try {
-            client = BloomdClient
-                    .newInstance(host, port)
-                    .get(timeoutSeconds, TimeUnit.SECONDS);
-        } catch (Throwable e) {
-            throw new RuntimeException(e);
-        }
+    public RxBloomdClientImpl(String host, int port, int maxConnections, int acquireTimeoutMillis) {
+        this.bloomdClientPool = new BloomdClientPool(host, port, maxConnections, acquireTimeoutMillis);
     }
 
-    public RxBloomdClientImpl(BloomdClient client) {
-        this.client = client;
+    public RxBloomdClientImpl(BloomdClientPool bloomdClientPool) {
+        this.bloomdClientPool = bloomdClientPool;
     }
 
     @Override
     public Single<List<BloomdFilter>> list() {
-        return Single.from(client.list());
+        return execute(BloomdClient::list);
     }
 
     @Override
     public Single<List<BloomdFilter>> list(String prefix) {
-        return Single.from(client.list(prefix));
+        return execute(client -> client.list(prefix));
     }
 
     @Override
     public Single<CreateResult> create(String filterName) {
-        return Single.from(client.create(filterName));
+        return execute(client -> client.create(filterName));
     }
 
     @Override
     public Single<CreateResult> create(CreateFilterArgs args) {
-        return Single.from(client.create(args));
+        return execute(client -> client.create(args));
     }
 
     @Override
     public Single<Boolean> drop(String filterName) {
-        return Single.from(client.drop(filterName));
+        return execute(client -> client.drop(filterName));
     }
 
     @Override
     public Single<Boolean> close(String filterName) {
-        return Single.from(client.close(filterName));
+        return execute(client -> client.close(filterName));
     }
 
     @Override
     public Single<ClearResult> clear(String filterName) {
-        return Single.from(client.clear(filterName));
+        return execute(client -> client.clear(filterName));
     }
 
     @Override
     public Single<StateResult> check(String filterName, String key) {
-        return Single.from(client.check(filterName, key));
+        return execute(client -> client.check(filterName, key));
     }
 
     @Override
     public Single<StateResult> set(String filterName, String key) {
-        return Single.from(client.set(filterName, key));
+        return execute(client -> client.set(filterName, key));
     }
 
     @Override
     public Single<List<StateResult>> multi(String filterName, String... keys) {
-        return Single.from(client.multi(filterName, keys));
+        return execute(client -> client.multi(filterName, keys));
     }
 
     @Override
     public Single<List<StateResult>> bulk(String filterName, String... keys) {
-        return Single.from(client.bulk(filterName, keys));
+        return execute(client -> client.bulk(filterName, keys));
     }
 
     @Override
     public Single<BloomdInfo> info(String filterName) {
-        return Single.from(client.info(filterName));
+        return execute(client -> client.info(filterName));
     }
 
     @Override
     public Single<Boolean> flush(String filterName) {
-        return Single.from(client.flush(filterName));
+        return execute(client -> client.flush(filterName));
     }
 
-    public BloomdClient getUnderlyingClient() {
-        return client;
+    private <T> Single<T> execute(Function<BloomdClient, Future<T>> fn) {
+        return Single.defer(() -> {
+            // acquire a client from the current pool
+            return Single
+                    .from(bloomdClientPool.acquire())
+                    .flatMap(client -> {
+                        // execute actual computation and release the client from the pool
+                        return Single
+                                .from(fn.apply(client))
+                                .doOnError(err -> {
+                                    LOG.log(Level.WARNING, err, () -> "Failed to apply computation");
+                                    bloomdClientPool.release(client);
+                                })
+                                .doOnSuccess(ignore -> bloomdClientPool.release(client));
+                    });
+        });
     }
 }

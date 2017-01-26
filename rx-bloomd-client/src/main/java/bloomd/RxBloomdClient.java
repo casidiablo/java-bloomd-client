@@ -1,20 +1,12 @@
 package bloomd;
 
-import java.util.List;
-
 import bloomd.args.CreateFilterArgs;
-import bloomd.replies.BloomdFilter;
-import bloomd.replies.BloomdInfo;
-import bloomd.replies.ClearResult;
-import bloomd.replies.CreateResult;
-import bloomd.replies.StateResult;
+import bloomd.replies.*;
 import rx.Single;
 
-public interface RxBloomdClient {
-    static RxBloomdClient newInstance(String host, int port) {
-        return new RxBloomdClientImpl(host, port);
-    }
+import java.util.List;
 
+public interface RxBloomdClient {
     Single<List<BloomdFilter>> list();
 
     Single<List<BloomdFilter>> list(String prefix);

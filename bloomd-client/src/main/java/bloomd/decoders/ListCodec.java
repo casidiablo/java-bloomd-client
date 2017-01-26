@@ -3,7 +3,6 @@ package bloomd.decoders;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 
 import bloomd.replies.BloomdFilter;
 
@@ -21,7 +20,7 @@ public class ListCodec implements BloomdCommandCodec<String, List<BloomdFilter>>
     }
 
     @Override
-    public Optional<List<BloomdFilter>> decode(String msg) throws Exception {
+    public List<BloomdFilter> decode(String msg) throws Exception {
         switch (msg) {
             case "START":
                 if (!filters.isEmpty()) {
@@ -29,14 +28,15 @@ public class ListCodec implements BloomdCommandCodec<String, List<BloomdFilter>>
                     throw new IllegalStateException("START not expected. List already initialized.");
                 }
 
-                return Optional.empty();
+                return null;
 
             case "END":
                 List<BloomdFilter> results = Collections.unmodifiableList(new ArrayList<>(filters));
 
-                filters.clear();// TODO explain
+                // we use the same list to build different responses, so we have to clear it
+                filters.clear();
 
-                return Optional.of(results);
+                return results;
 
             default:
                 String[] parts = msg.split(" ");
@@ -49,7 +49,7 @@ public class ListCodec implements BloomdCommandCodec<String, List<BloomdFilter>>
 
                 filters.add(new BloomdFilter(filterName, falsePositiveProbability, sizeBytes, capacity, size));
 
-                return Optional.empty();
+                return null;
         }
     }
 }

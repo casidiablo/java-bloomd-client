@@ -1,8 +1,5 @@
 package bloomd;
 
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.atomic.AtomicBoolean;
-
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.EventLoopGroup;
@@ -14,6 +11,9 @@ import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.util.concurrent.Future;
 import io.netty.util.concurrent.GenericFutureListener;
 
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicBoolean;
+
 public class BloomdClientPool {
 
     private final AtomicBoolean closed = new AtomicBoolean(false);
@@ -21,7 +21,7 @@ public class BloomdClientPool {
     private final ClientInitializer initializer;
     private final EventLoopGroup group;
 
-    public BloomdClientPool(String host, int port, int maxConnections) {
+    public BloomdClientPool(String host, int port, int maxConnections, int acquireTimeoutMillis) {
         group = new NioEventLoopGroup();
         initializer = new ClientInitializer();
 
@@ -49,7 +49,7 @@ public class BloomdClientPool {
 
         channelPool = new FixedChannelPool(
                 cb, poolHandler, ChannelHealthChecker.ACTIVE,
-                FixedChannelPool.AcquireTimeoutAction.FAIL, 10000, // TODO make this configurable
+                FixedChannelPool.AcquireTimeoutAction.FAIL, acquireTimeoutMillis,
                 maxConnections, Integer.MAX_VALUE, true);
     }
 
@@ -82,7 +82,7 @@ public class BloomdClientPool {
 
     /**
      * Release a {@link BloomdClient} back to this {@link BloomdClientPool}. The returned {@link Future} is notified once
-     * the release is successful and failed otherwise. When failed the {@link BloomdClient} connection will automatically closed.
+     * the release is successful and failed otherwise. When failed the {@link BloomdClient} connection will be automatically closed.
      */
     public CompletableFuture<Void> release(BloomdClient client) {
         if (closed.get()) {

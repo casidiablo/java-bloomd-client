@@ -1,7 +1,5 @@
 package bloomd.decoders;
 
-import java.util.Optional;
-
 import bloomd.args.CreateFilterArgs;
 import bloomd.replies.CreateResult;
 
@@ -33,16 +31,16 @@ public class CreateCodec implements BloomdCommandCodec<CreateFilterArgs, CreateR
     }
 
     @Override
-    public Optional<CreateResult> decode(String msg) throws Exception {
+    public CreateResult decode(String msg) throws Exception {
         switch (msg) {
             case "Done":
-                return Optional.of(CreateResult.DONE);
+                return CreateResult.DONE;
 
             case "Exists":
-                return Optional.of(CreateResult.EXISTS);
+                return CreateResult.EXISTS;
 
             case "Delete in progress":
-                return Optional.of(CreateResult.DELETE_IN_PROGRESS);
+                return CreateResult.DELETE_IN_PROGRESS;
 
             default:
                 throw new RuntimeException(msg);
