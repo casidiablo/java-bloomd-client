@@ -52,7 +52,7 @@ public class TestRxConnPooling {
         Thread.sleep(3000);
 
         executor = Executors.newFixedThreadPool(50);
-        client = new RxBloomdClientImpl(new BloomdClientPool("localhost", port, 20, 2000));
+        client = new RxBloomdClientImpl(new BloomdClientPool("localhost", port, 20, 2000, 2000));
     }
 
     @Test

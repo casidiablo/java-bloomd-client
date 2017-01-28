@@ -17,11 +17,11 @@ public class RxBloomdClientImpl implements RxBloomdClient {
     private final BloomdClientPool bloomdClientPool;
 
     public RxBloomdClientImpl(String host, int port) {
-        this(host, port, 1, 10_000);
+        this(host, port, 1, 2_000, 2_000);
     }
 
-    public RxBloomdClientImpl(String host, int port, int maxConnections, int acquireTimeoutMillis) {
-        this.bloomdClientPool = new BloomdClientPool(host, port, maxConnections, acquireTimeoutMillis);
+    public RxBloomdClientImpl(String host, int port, int maxConnections, int connectionTimeoutMillis, int acquireTimeoutMillis) {
+        this.bloomdClientPool = new BloomdClientPool(host, port, maxConnections, connectionTimeoutMillis, acquireTimeoutMillis);
     }
 
     public RxBloomdClientImpl(BloomdClientPool bloomdClientPool) {

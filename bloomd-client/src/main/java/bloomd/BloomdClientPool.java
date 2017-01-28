@@ -2,6 +2,7 @@ package bloomd;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
+import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.pool.ChannelHealthChecker;
@@ -21,13 +22,14 @@ public class BloomdClientPool {
     private final ClientInitializer initializer;
     private final EventLoopGroup group;
 
-    public BloomdClientPool(String host, int port, int maxConnections, int acquireTimeoutMillis) {
+    public BloomdClientPool(String host, int port, int maxConnections, int connectTimeoutMillis, int acquireTimeoutMillis) {
         group = new NioEventLoopGroup();
         initializer = new ClientInitializer();
 
         Bootstrap cb = new Bootstrap()
                 .group(group)
                 .channel(NioSocketChannel.class)
+                .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, connectTimeoutMillis)
                 .remoteAddress(host, port);
 
         ChannelPoolHandler poolHandler = new ChannelPoolHandler() {

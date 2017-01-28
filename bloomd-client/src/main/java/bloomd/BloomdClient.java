@@ -46,13 +46,13 @@ public interface BloomdClient {
      * @return a future that will resolve to a {@link BloomdClient} implementation
      */
     static CompletableFuture<BloomdClient> newInstance(String host, int port, int maxConnections) {
-        return newInstance(host, port, maxConnections, 2_000);
+        return newInstance(host, port, maxConnections, 2_000, 2_000);
     }
 
     /**
      * @return a future that will resolve to a {@link BloomdClient} implementation
      */
-    static CompletableFuture<BloomdClient> newInstance(String host, int port, int maxConnections, int acquireTimeoutMillis) {
-        return new BloomdClientPool(host, port, maxConnections, acquireTimeoutMillis).acquire();
+    static CompletableFuture<BloomdClient> newInstance(String host, int port, int maxConnections, int connectionTimeoutMillis, int acquireTimeoutMillis) {
+        return new BloomdClientPool(host, port, maxConnections, connectionTimeoutMillis, acquireTimeoutMillis).acquire();
     }
 }

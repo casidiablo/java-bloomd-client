@@ -1,10 +1,5 @@
 package bloomd;
 
-import static bloomd.DockerHelper.startBloomdInDocker;
-import static bloomd.DockerHelper.stopBloomdInDocker;
-import static org.assertj.core.api.Java6Assertions.assertThat;
-import static org.junit.Assert.fail;
-
 import org.junit.Test;
 
 import java.net.ConnectException;
@@ -14,11 +9,16 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
+import static bloomd.DockerHelper.startBloomdInDocker;
+import static bloomd.DockerHelper.stopBloomdInDocker;
+import static org.assertj.core.api.Java6Assertions.assertThat;
+import static org.junit.Assert.fail;
+
 public class TestPoolingDisconnection extends DockerBasedTest {
 
     @Test
     public void testClientsPool() throws Exception {
-        BloomdClientPool bloomdClientPool = new BloomdClientPool("localhost", port, 5, 10000);
+        BloomdClientPool bloomdClientPool = new BloomdClientPool("localhost", port, 5, 2000, 10000);
 
         List<BloomdClient> clients = new ArrayList<>();
 
