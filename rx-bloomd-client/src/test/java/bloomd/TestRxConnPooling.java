@@ -25,7 +25,7 @@ public class TestRxConnPooling {
 
     static {
         OPS.add(RxBloomdClient::list);
-        OPS.add(client -> client.create(randomFilterName()));
+        OPS.add(client -> client.create(randomFilterName(), 200));
         OPS.add(client -> client.drop(randomFilterName()));
         OPS.add(client -> client.close(randomFilterName()));
         OPS.add(client -> client.clear(randomFilterName()));
