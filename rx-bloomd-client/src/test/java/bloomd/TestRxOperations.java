@@ -1,11 +1,11 @@
 package bloomd;
 
-import bloomd.replies.BloomdFilter;
 import bloomd.replies.CreateResult;
 import bloomd.replies.StateResult;
 import org.junit.Before;
 import org.junit.Test;
 import rx.Observable;
+import rx.Single;
 import rx.observers.TestSubscriber;
 import rx.schedulers.Schedulers;
 
@@ -13,12 +13,13 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Random;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Java6Assertions.assertThat;
+import static org.assertj.core.api.Java6Assertions.fail;
 
 public class TestRxOperations {
     private static final String FILTER = "filter" + System.currentTimeMillis();
@@ -43,7 +44,7 @@ public class TestRxOperations {
     @Test
     public void testBloomdOperations() throws Exception {
         // make sure filters can be created
-        TestSubscriber<List<BloomdFilter>> subscriber = new TestSubscriber<>();
+        TestSubscriber<List<StateResult>> subscriber = new TestSubscriber<>();
         client.create(FILTER)
               .doOnSuccess(result -> assertThat(result).isEqualTo(CreateResult.DONE))
 
@@ -119,6 +120,15 @@ public class TestRxOperations {
               .flatMap(ignore -> client.list(FILTER))
               .doOnSuccess(list -> assertThat(list).isEmpty())
 
+
+              // handle nonexistent filter check
+              .flatMap(ignore -> client.bulk(FILTER, "something")
+                      .doOnSuccess(__ -> fail("Should not have reached this closure"))
+                      .onErrorResumeNext(err -> {
+                          assertThat(err).isInstanceOf(FilterDoesNotExistException.class);
+                          return Single.just(Collections.singletonList(StateResult.NO));
+                      }))
+
               .subscribe(subscriber);
 
         subscriber.awaitTerminalEvent(10, TimeUnit.SECONDS);
@@ -147,7 +157,7 @@ public class TestRxOperations {
                       return client
                               .check(FILTER, "foo")
                               .retry((integer, throwable) -> {
-                                  assertThat(throwable).isInstanceOf(ExecutionException.class);
+                                  assertThat(throwable).isInstanceOf(IllegalStateException.class);
 
                                   try {
                                       Thread.sleep(2000);

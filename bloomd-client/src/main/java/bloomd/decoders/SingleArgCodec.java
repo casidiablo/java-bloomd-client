@@ -1,5 +1,7 @@
 package bloomd.decoders;
 
+import bloomd.FilterDoesNotExistException;
+
 /**
  * Single arg commands codec. Used to implement `close`, `drop` and `flush`.
  */
@@ -23,7 +25,7 @@ public class SingleArgCodec implements BloomdCommandCodec<String, Boolean> {
                 return true;
 
             case "Filter does not exist":
-                return false;
+                throw new FilterDoesNotExistException(msg);
 
             default:
                 throw new RuntimeException(msg);

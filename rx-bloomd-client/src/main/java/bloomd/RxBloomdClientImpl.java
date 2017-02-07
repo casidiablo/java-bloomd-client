@@ -9,6 +9,7 @@ import bloomd.replies.StateResult;
 import rx.Single;
 
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
@@ -193,8 +194,13 @@ public class RxBloomdClientImpl implements RxBloomdClient {
                                 LOG.log(Level.WARNING, err, () -> "Failed to apply computation");
                                 bloomdClientPool.release(client);
                             })
-                            .doOnSuccess(ignore -> {
-                                bloomdClientPool.release(client);
+                            .doOnSuccess(ignore -> bloomdClientPool.release(client))
+                            .onErrorResumeNext(err -> {
+                                if (err instanceof ExecutionException) {
+                                    return Single.error(err.getCause());
+                                } else {
+                                    return Single.error(err);
+                                }
                             });
                 });
     }

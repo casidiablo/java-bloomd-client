@@ -1,5 +1,6 @@
 package bloomd.decoders;
 
+import bloomd.FilterDoesNotExistException;
 import bloomd.replies.BloomdInfo;
 
 public class InfoCodec implements BloomdCommandCodec<String, BloomdInfo> {
@@ -15,7 +16,7 @@ public class InfoCodec implements BloomdCommandCodec<String, BloomdInfo> {
     public BloomdInfo decode(String msg) throws Exception {
         switch (msg) {
             case "Filter does not exist":
-                throw new IllegalStateException(msg);
+                throw new FilterDoesNotExistException(msg);
 
             case "START":
                 if (builder != null) {

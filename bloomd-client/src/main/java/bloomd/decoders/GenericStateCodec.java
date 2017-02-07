@@ -1,5 +1,6 @@
 package bloomd.decoders;
 
+import bloomd.FilterDoesNotExistException;
 import bloomd.args.StateArgs;
 import bloomd.replies.StateResult;
 
@@ -52,7 +53,7 @@ public class GenericStateCodec<T> implements BloomdCommandCodec<StateArgs, T> {
     private List<StateResult> parseStateResult(String msg) {
         switch (msg) {
             case "Filter does not exist":
-                throw new RuntimeException(msg);
+                throw new FilterDoesNotExistException(msg);
 
             default:
                 String[] parts = msg.split(" ");
