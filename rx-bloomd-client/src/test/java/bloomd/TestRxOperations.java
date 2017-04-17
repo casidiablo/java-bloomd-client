@@ -157,7 +157,7 @@ public class TestRxOperations {
                       return client
                               .check(FILTER, "foo")
                               .retry((integer, throwable) -> {
-                                  assertThat(throwable).isInstanceOf(IllegalStateException.class);
+                                  assertThat(throwable).isInstanceOfAny(IllegalStateException.class, FilterDoesNotExistException.class);
 
                                   try {
                                       Thread.sleep(2000);

@@ -9,9 +9,11 @@ import bloomd.replies.StateResult;
 import rx.Single;
 
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -180,8 +182,10 @@ public class RxBloomdClientImpl implements RxBloomdClient {
     }
 
     private <T> Single<T> doExecute(Function<BloomdClient, Future<T>> fn, long timeoutMillis) {
+        AtomicBoolean alreadyReleased = new AtomicBoolean(false);
+        CompletableFuture<BloomdClient> acquire = bloomdClientPool.acquire();
         return Single
-                .from(bloomdClientPool.acquire())
+                .from(acquire)
                 .flatMap(client -> {
                     // execute actual computation and release the client from the pool
                     Single<T> computation = Single.from(fn.apply(client));
@@ -190,18 +194,30 @@ public class RxBloomdClientImpl implements RxBloomdClient {
                     }
 
                     return computation
-                            .doOnError(err -> {
-                                LOG.log(Level.WARNING, err, () -> "Failed to apply computation");
-                                bloomdClientPool.release(client);
-                            })
-                            .doOnSuccess(ignore -> bloomdClientPool.release(client))
                             .onErrorResumeNext(err -> {
                                 if (err instanceof ExecutionException) {
-                                    return Single.error(err.getCause());
-                                } else {
-                                    return Single.error(err);
+                                    err = err.getCause();
                                 }
+
+                                LOG.log(Level.WARNING, err, () -> "Failed to apply computation");
+                                alreadyReleased.set(true);
+                                bloomdClientPool.release(client);
+
+                                return Single.error(err);
+                            })
+                            .doOnSuccess(ignore -> {
+                                alreadyReleased.set(true);
+                                bloomdClientPool.release(client);
                             });
+                })
+                .doOnUnsubscribe(() -> {
+                    if (!alreadyReleased.get()) {
+                        try {
+                            bloomdClientPool.release(acquire.get());
+                        } catch (Throwable e) {
+                            LOG.log(Level.SEVERE, e, () -> "Failed to release connection");
+                        }
+                    }
                 });
     }
 }
