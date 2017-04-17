@@ -174,14 +174,21 @@ public class RxBloomdClientImpl implements RxBloomdClient {
     }
 
     private <T> Single<T> execute(Function<BloomdClient, Future<T>> fn) {
-        return Single.defer(() -> doExecute(fn, Long.MAX_VALUE));
+        String origin = origin();
+        return Single.defer(() -> doExecute(fn, Long.MAX_VALUE, origin));
     }
 
     private <T> Single<T> execute(Function<BloomdClient, Future<T>> fn, long timeoutMillis) {
-        return Single.defer(() -> doExecute(fn, timeoutMillis));
+        String origin = origin();
+        return Single.defer(() -> doExecute(fn, timeoutMillis, origin));
     }
 
-    private <T> Single<T> doExecute(Function<BloomdClient, Future<T>> fn, long timeoutMillis) {
+    private static String origin() {
+        StackTraceElement[] stackTrace = new Throwable().getStackTrace();
+        return stackTrace[2].getMethodName();
+    }
+
+    private <T> Single<T> doExecute(Function<BloomdClient, Future<T>> fn, long timeoutMillis, String origin) {
         AtomicBoolean alreadyReleased = new AtomicBoolean(false);
         CompletableFuture<BloomdClient> acquire = bloomdClientPool.acquire();
         return Single
@@ -199,7 +206,7 @@ public class RxBloomdClientImpl implements RxBloomdClient {
                                     err = err.getCause();
                                 }
 
-                                LOG.log(Level.WARNING, err, () -> "Failed to apply computation");
+                                LOG.log(Level.WARNING, err, () -> "Failed to apply computation: " + origin);
                                 alreadyReleased.set(true);
                                 bloomdClientPool.release(client);
 
