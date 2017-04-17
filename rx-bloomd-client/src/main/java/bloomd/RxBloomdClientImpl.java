@@ -13,6 +13,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 import java.util.logging.Level;
@@ -188,7 +189,7 @@ public class RxBloomdClientImpl implements RxBloomdClient {
         return stackTrace[2].getMethodName();
     }
 
-    private <T> Single<T> doExecute(Function<BloomdClient, Future<T>> fn, long timeoutMillis, String origin) {
+    private <T> Single<T> doExecute(Function<BloomdClient, Future<T>> fn, long timeoutMillis, String opName) {
         AtomicBoolean alreadyReleased = new AtomicBoolean(false);
         CompletableFuture<BloomdClient> acquire = bloomdClientPool.acquire();
         return Single
@@ -206,9 +207,14 @@ public class RxBloomdClientImpl implements RxBloomdClient {
                                     err = err.getCause();
                                 }
 
-                                LOG.log(Level.WARNING, err, () -> "Failed to apply computation: " + origin);
+                                if (err instanceof TimeoutException && timeoutMillis != Long.MAX_VALUE) {
+                                    err = new TimeoutException("Failed to execute " + opName + " in less than " + timeoutMillis + "ms");
+                                }
+
                                 alreadyReleased.set(true);
                                 bloomdClientPool.release(client);
+
+                                LOG.log(Level.WARNING, err, () -> "Failed to apply computation: " + opName);
 
                                 return Single.error(err);
                             })
